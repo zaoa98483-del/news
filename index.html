@@ -120,172 +120,81 @@
         </div>
     </main>
     <footer class="footer">每日自动更新 · 个人专属新闻站</footer>
+<script>
+(async function() {
+    // 显示日期
+    const dateEl = document.getElementById('currentDate');
+    const now = new Date();
+    const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    dateEl.textContent = `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 ${weekdays[now.getDay()]}`;
 
-    <script>
-        (function() {
-            // 日期
-            const now = new Date();
-            const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-            document.getElementById('currentDate').textContent =
-                `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 ${weekdays[now.getDay()]}`;
+    // 从 data.json 加载新闻
+    try {
+        const response = await fetch('data.json');
+        const data = await response.json();
+        renderXinwen(data.xinwenlianbo);
+        renderShehui(data.shehui);
+        if (data.jiaodian) {
+            document.getElementById('jiaodian-title').textContent = data.jiaodian.title;
+            document.getElementById('jiaodian-summary').textContent = data.jiaodian.summary;
+        }
+        renderList('guoji-list', data.guoji);
+        renderList('shijie-list', data.shijie);
+        renderWangluo(data.wangluo);
+    } catch(e) {
+        console.error('新闻加载失败，请检查 data.json 是否存在');
+        // 这里可以保留一些静态文字作为最后保护
+        document.getElementById('xinwen-list').innerHTML = '<li>新闻加载失败，请稍后刷新</li>';
+    }
 
-            // 备用数据（当网络请求失败时显示）
-            const fallbackData = {
-                xinwen: [
-                    {title:"全国科技创新大会在京召开",desc:"多项重大科研成果集中发布",time:"19:00"},
-                    {title:"上半年GDP同比增长5.2%",desc:"国民经济稳中向好",time:"19:05"},
-                    {title:"暑运发送旅客突破10亿人次",desc:"创历史同期新高",time:"19:10"},
-                    {title:"我国成功发射新技术试验卫星",desc:"空间探索再添利器",time:"19:16"},
-                    {title:"各地保障夏季电力供应",desc:"迎峰度夏有序推进",time:"19:22"}
-                ],
-                shehui: [
-                    {title:"老旧小区改造提升居民生活品质",tag:"热门"},
-                    {title:"新能源汽车渗透率突破55%",tag:"攀升"},
-                    {title:"全民健身日火热展开",tag:"新"},
-                    {title:"新型储能成本下降40%",tag:"攀升"},
-                    {title:"暑期文旅亲子游增长80%",tag:"热门"},
-                    {title:"智能家居加速普及",tag:"新"}
-                ],
-                jiaodian: {
-                    title:"乡村振兴路上的青年力量——90后新农人的创业故事",
-                    summary:"从城市回到乡村，从写字楼走向田间地头，一批批90后青年正成为乡村振兴的中坚力量。他们用新技术、新理念改造传统农业，让手机成为“新农具”，让直播成为“新农活”。"
-                },
-                guoji: ["联合国大会就全球治理改革展开讨论","欧盟推动数字经济发展新战略","东盟外长会议聚焦区域一体化","中东多国加速能源转型","非洲自贸区建设取得进展"],
-                shijie: ["全球气候行动峰会在巴黎举行","国际空间站新实验模块对接","世界人工智能大会召开","全球粮食安全指数发布","IMF上调全球增长预期"],
-                wangluo: [
-                    {title:"AI绘画引发创意产业讨论",heat:"🔥980万"},
-                    {title:"夏日旅行打卡地推荐",heat:"🔥756万"},
-                    {title:"国产动画电影票房破纪录",heat:"🔥620万"},
-                    {title:"全民健身挑战赛",heat:"📈480万"},
-                    {title:"智能家居新体验",heat:"📈350万"},
-                    {title:"各地特色美食出圈",heat:"🆕210万"}
-                ]
-            };
+    function renderXinwen(items) {
+        const ul = document.getElementById('xinwen-list');
+        ul.innerHTML = '';
+        items.forEach((item,i) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="news-index">${String(i+1).padStart(2,'0')}</span>
+                <span><span class="news-title-text">${item.title}</span>
+                <span class="news-brief">${item.description || ''}</span></span>
+                <span class="news-time-tag">${item.time || '今日'}</span>`;
+            ul.appendChild(li);
+        });
+    }
 
-            // 尝试从多个免费RSS源获取真实新闻（使用公共CORS代理）
-            async function fetchRealNews() {
-                // RSS源列表，按优先级尝试
-                const sources = [
-                    { name:'新华社', url:'http://www.xinhuanet.com/rss/title/10.xml' },
-                    { name:'央视网', url:'https://news.cctv.com/rss/' }
-                ];
-                for (let src of sources) {
-                    try {
-                        // 使用免费的rss2json服务（无需API Key）
-                        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.url)}`;
-                        const resp = await fetch(apiUrl);
-                        const json = await resp.json();
-                        if (json.status === 'ok' && json.items && json.items.length > 0) {
-                            return json.items.map(item => ({
-                                title: item.title,
-                                desc: item.description?.replace(/<[^>]*>/g,'').substring(0,50) || '',
-                                time: new Date(item.pubDate).toLocaleTimeString('zh-CN',{hour12:false}).slice(0,5)
-                            }));
-                        }
-                    } catch (e) {
-                        console.warn(`${src.name} RSS加载失败:`, e.message);
-                    }
-                }
-                return null; // 全部失败则使用备用数据
-            }
+    function renderShehui(items) {
+        const ul = document.getElementById('shehui-list');
+        ul.innerHTML = '';
+        items.forEach((item,i) => {
+            const li = document.createElement('li');
+            const rank = i+1;
+            let cls = '';
+            if(rank===1) cls='top1';
+            else if(rank===2) cls='top2';
+            else if(rank===3) cls='top3';
+            li.innerHTML = `<span class="hot-rank ${cls}">${rank}</span><span>${item.title}</span>
+                ${item.tag?`<span class="hot-tag">${item.tag}</span>`:''}`;
+            ul.appendChild(li);
+        });
+    }
 
-            // 渲染新闻连播
-            function renderXinwen(items) {
-                const ul = document.getElementById('xinwen-list');
-                ul.innerHTML = '';
-                items.forEach((item,i) => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<span class="news-index">${String(i+1).padStart(2,'0')}</span>
-                        <span><span class="news-title-text">${item.title}</span>
-                        <span class="news-brief">${item.desc || item.description || ''}</span></span>
-                        <span class="news-time-tag">${item.time || '今日'}</span>`;
-                    ul.appendChild(li);
-                });
-            }
+    function renderList(id, items) {
+        const ul = document.getElementById(id);
+        ul.innerHTML = '';
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = typeof item === 'string' ? item : item.title;
+            ul.appendChild(li);
+        });
+    }
 
-            // 渲染社会热点
-            function renderShehui(items) {
-                const ul = document.getElementById('shehui-list');
-                ul.innerHTML = '';
-                items.forEach((item,i) => {
-                    const li = document.createElement('li');
-                    const rank = i+1;
-                    let cls = '';
-                    if(rank===1) cls='top1';
-                    else if(rank===2) cls='top2';
-                    else if(rank===3) cls='top3';
-                    li.innerHTML = `<span class="hot-rank ${cls}">${rank}</span><span>${item.title}</span>
-                        ${item.tag?`<span class="hot-tag">${item.tag}</span>`:''}`;
-                    ul.appendChild(li);
-                });
-            }
-
-            // 其他列表渲染
-            function renderList(id, items) {
-                const ul = document.getElementById(id);
-                ul.innerHTML = '';
-                items.forEach(item => {
-                    const li = document.createElement('li');
-                    li.innerHTML = typeof item === 'string' ? item : `<span>${item.title}</span>`;
-                    ul.appendChild(li);
-                });
-            }
-
-            function renderWangluo(items) {
-                const div = document.getElementById('wangluo-list');
-                div.innerHTML = '';
-                items.forEach(item => {
-                    const span = document.createElement('span');
-                    span.className = 'topic-tag-item';
-                    span.innerHTML = `#${item.title} <span style="font-size:0.7rem;color:#999;">${item.heat||''}</span>`;
-                    div.appendChild(span);
-                });
-            }
-
-            // 主流程
-            async function init() {
-                const realNews = await fetchRealNews();
-                if (realNews && realNews.length >= 5) {
-                    // 用真实新闻填充新闻连播，其他栏目用备用数据（因为RSS通常只给头条）
-                    renderXinwen(realNews.slice(0,5));
-                    // 社会热点从真实新闻衍生几个（模拟）
-                    const hotFromReal = realNews.slice(0,6).map((item,i) => ({
-                        title: item.title,
-                        tag: i<2?'热门':(i<4?'攀升':'新')
-                    }));
-                    renderShehui(hotFromReal);
-                    document.getElementById('jiaodian-title').textContent = '今日焦点：'+realNews[0].title;
-                    document.getElementById('jiaodian-summary').textContent = realNews[0].desc || '详细报道请关注官方媒体。';
-                    renderList('guoji-list', [
-                        '国际局势动态更新中，请查看实时新闻',
-                        '欧盟推进数字欧元计划',
-                        '中东和平进程取得新进展'
-                    ]);
-                    renderList('shijie-list', [
-                        '全球气候峰会达成新共识',
-                        '国际空间站迎来新实验舱',
-                        '非洲联盟推动大陆自贸区'
-                    ]);
-                    renderWangluo([
-                        {title:'AI绘画引热议',heat:'🔥980万'},
-                        {title:'国产动画新纪录',heat:'🔥756万'},
-                        {title:'夏日旅行打卡',heat:'📈480万'}
-                    ]);
-                } else {
-                    // 全部使用备用数据
-                    renderXinwen(fallbackData.xinwen);
-                    renderShehui(fallbackData.shehui);
-                    document.getElementById('jiaodian-title').textContent = fallbackData.jiaodian.title;
-                    document.getElementById('jiaodian-summary').textContent = fallbackData.jiaodian.summary;
-                    renderList('guoji-list', fallbackData.guoji);
-                    renderList('shijie-list', fallbackData.shijie);
-                    renderWangluo(fallbackData.wangluo);
-                    console.info('📡 实时新闻获取失败，已显示离线备用内容。');
-                }
-            }
-
-            init();
-        })();
-    </script>
-</body>
-</html>
+    function renderWangluo(items) {
+        const div = document.getElementById('wangluo-list');
+        div.innerHTML = '';
+        items.forEach(item => {
+            const span = document.createElement('span');
+            span.className = 'topic-tag-item';
+            span.innerHTML = `#${item.title} <span style="font-size:0.7rem;color:#999;">${item.heat||''}</span>`;
+            div.appendChild(span);
+        });
+    }
+})();
+</script>
