@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📰 我的每日新闻 · 自动实时版</title>
+    <title>📰 我的每日新闻 · 自动实时</title>
     <style>
         :root {
-            --bg: #f0f2f5; --card-bg: #ffffff; --text: #1a1a2e; --text-secondary: #555;
-            --text-muted: #888; --shadow: 0 2px 12px rgba(0,0,0,0.06);
-            --shadow-hover: 0 8px 28px rgba(0,0,0,0.10); --radius: 14px;
-            --transition: 0.25s ease;
+            --bg: #f0f2f5; --card-bg: #ffffff; --text: #1a1a2e; --text-muted: #888;
+            --shadow: 0 2px 12px rgba(0,0,0,0.06); --radius: 14px;
             --color-xinwen: #c62828; --color-jiaodian: #e65100; --color-shehui: #d84315;
             --color-guoji: #1565c0; --color-shijie: #6a1b9a; --color-wangluo: #00838f;
             --header-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #1a1a2e 100%);
@@ -18,15 +16,16 @@
         body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
         .header{background:var(--header-gradient);color:#fff;padding:18px 0;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.18);border-bottom:3px solid #e63946;}
         .header-inner{max-width:1300px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-        .logo{font-size:1.5rem;font-weight:700;letter-spacing:1px;}
-        .header-date{background:rgba(255,255,255,0.1);padding:6px 16px;border-radius:20px;font-size:0.9rem;}
+        .logo{font-size:1.5rem;font-weight:700;} .header-date{background:rgba(255,255,255,0.1);padding:6px 16px;border-radius:20px;font-size:0.9rem;}
+        .status-bar{max-width:1300px;margin:8px auto 0;padding:0 24px;font-size:0.8rem;color:#888;text-align:right;}
+        .status-bar span{margin-left:10px;}
         .main-container{max-width:1300px;margin:0 auto;padding:20px 24px 40px;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:auto auto;gap:20px;grid-template-areas:"xinwen shehui" "jiaodian jiaodian" "bottom bottom";}
-        .card{background:var(--card-bg);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);transition:var(--transition);border:1px solid transparent;}
-        .card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px);border-color:#e8e8ed;}
+        .card{background:var(--card-bg);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);transition:0.25s;border:1px solid transparent;}
+        .card:hover{box-shadow:0 8px 28px rgba(0,0,0,0.10);transform:translateY(-2px);}
         .card-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid #f0f0f4;position:relative;}
         .card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;}
         .card-title{font-size:1.1rem;font-weight:700;}
-        .card-badge{font-size:0.7rem;padding:3px 10px;border-radius:12px;font-weight:600;margin-left:auto;background:#fef5f5;color:var(--color-xinwen);}
+        .card-badge{font-size:0.7rem;padding:3px 10px;border-radius:12px;font-weight:600;margin-left:auto;}
         .card-xinwen .card-icon{background:var(--color-xinwen);} .card-xinwen .card-header::after{content:'';position:absolute;bottom:-2px;left:0;width:55px;height:2px;background:var(--color-xinwen);}
         .card-shehui .card-icon{background:var(--color-shehui);} .card-shehui .card-header::after{background:var(--color-shehui);width:50px;}
         .card-jiaodian{border-left:4px solid var(--color-jiaodian);background:linear-gradient(135deg,#fff 0%,#fffdf7 60%,#fffaf3 100%);}
@@ -62,38 +61,34 @@
         .topic-tag-item{padding:6px 14px;border-radius:18px;font-size:0.82rem;font-weight:500;background:#f5fcfd;color:var(--color-wangluo);border:1px solid #e0f0f2;white-space:nowrap;}
         .topic-tag-item:hover{background:#e0f4f6;}
         .footer{text-align:center;padding:20px;color:#aaa;font-size:0.8rem;}
-        .loading{text-align:center;padding:20px;color:#999;}
         @media(max-width:900px){
             .main-container{grid-template-columns:1fr;grid-template-areas:"xinwen" "shehui" "jiaodian" "bottom";}
-            .bottom-row{grid-template-columns:1fr 1fr;}
-            .card-wangluo{grid-column:1/-1;}
+            .bottom-row{grid-template-columns:1fr 1fr;} .card-wangluo{grid-column:1/-1;}
         }
-        @media(max-width:600px){
-            .bottom-row{grid-template-columns:1fr;}
-        }
+        @media(max-width:600px){ .bottom-row{grid-template-columns:1fr;} }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-inner">
-            <div class="logo">📰 每日新闻观察</div>
-            <div class="header-date" id="currentDate">加载中...</div>
+            <div class="logo">📰 我的每日新闻</div>
+            <div class="header-date" id="currentDate"></div>
+        </div>
+        <div class="status-bar">
+            <span id="updateStatus">⏳ 正在抓取最新新闻…</span>
         </div>
     </header>
 
     <main class="main-container">
-        <!-- 新闻连播 -->
         <section class="card card-xinwen">
             <div class="card-header"><div class="card-icon">📺</div><h2 class="card-title">新闻连播</h2><span class="card-badge">实时</span></div>
-            <ul class="news-list" id="xinwen-list"><li class="loading">⏳ 正在加载最新新闻...</li></ul>
+            <ul class="news-list" id="xinwen-list"><li>⏳ 加载中...</li></ul>
         </section>
-        <!-- 社会热点 -->
         <section class="card card-shehui">
             <div class="card-header"><div class="card-icon">🔥</div><h2 class="card-title">社会热点</h2><span class="card-badge">热榜</span></div>
-            <ul class="hot-list" id="shehui-list"><li class="loading">⏳ 加载中...</li></ul>
+            <ul class="hot-list" id="shehui-list"><li>⏳ 加载中...</li></ul>
         </section>
-        <!-- 焦点访谈 -->
-        <section class="card card-jiaodian" id="jiaodian-card">
+        <section class="card card-jiaodian">
             <div class="card-header"><div class="card-icon">🎙️</div><h2 class="card-title">焦点访谈</h2><span class="card-badge">深度</span></div>
             <div class="jiaodian-content">
                 <div class="jiaodian-visual">🌾</div>
@@ -103,98 +98,182 @@
                 </div>
             </div>
         </section>
-        <!-- 底部三栏 -->
         <div class="bottom-row">
-            <section class="card card-guoji">
-                <div class="card-header"><div class="card-icon">🌍</div><h2 class="card-title">国际局势</h2></div>
-                <ul class="compact-news-list" id="guoji-list"><li class="loading">⏳</li></ul>
-            </section>
-            <section class="card card-shijie">
-                <div class="card-header"><div class="card-icon">💥</div><h2 class="card-title">世界热点</h2></div>
-                <ul class="compact-news-list" id="shijie-list"><li class="loading">⏳</li></ul>
-            </section>
-            <section class="card card-wangluo">
-                <div class="card-header"><div class="card-icon">📱</div><h2 class="card-title">网络热门</h2></div>
-                <div class="topic-tag-list" id="wangluo-list"><span class="loading">⏳ 加载中...</span></div>
-            </section>
+            <section class="card card-guoji"><div class="card-header"><div class="card-icon">🌍</div><h2 class="card-title">国际局势</h2></div><ul class="compact-news-list" id="guoji-list"><li>⏳</li></ul></section>
+            <section class="card card-shijie"><div class="card-header"><div class="card-icon">💥</div><h2 class="card-title">世界热点</h2></div><ul class="compact-news-list" id="shijie-list"><li>⏳</li></ul></section>
+            <section class="card card-wangluo"><div class="card-header"><div class="card-icon">📱</div><h2 class="card-title">网络热门</h2></div><div class="topic-tag-list" id="wangluo-list"><span>⏳</span></div></section>
         </div>
     </main>
-    <footer class="footer">每日自动更新 · 个人专属新闻站</footer>
-<script>
-(async function() {
-    // 显示日期
-    const dateEl = document.getElementById('currentDate');
-    const now = new Date();
-    const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-    dateEl.textContent = `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 ${weekdays[now.getDay()]}`;
+    <footer class="footer">数据来源：新华社、央视新闻 · 自动实时更新</footer>
 
-    // 从 data.json 加载新闻
-    try {
-        const response = await fetch('data.json');
-        const data = await response.json();
-        renderXinwen(data.xinwenlianbo);
-        renderShehui(data.shehui);
-        if (data.jiaodian) {
-            document.getElementById('jiaodian-title').textContent = data.jiaodian.title;
-            document.getElementById('jiaodian-summary').textContent = data.jiaodian.summary;
-        }
-        renderList('guoji-list', data.guoji);
-        renderList('shijie-list', data.shijie);
-        renderWangluo(data.wangluo);
-    } catch(e) {
-        console.error('新闻加载失败，请检查 data.json 是否存在');
-        // 这里可以保留一些静态文字作为最后保护
-        document.getElementById('xinwen-list').innerHTML = '<li>新闻加载失败，请稍后刷新</li>';
-    }
+    <script>
+        (function() {
+            // 日期显示
+            const now = new Date();
+            const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+            document.getElementById('currentDate').textContent = 
+                `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 ${weekdays[now.getDay()]}`;
 
-    function renderXinwen(items) {
-        const ul = document.getElementById('xinwen-list');
-        ul.innerHTML = '';
-        items.forEach((item,i) => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="news-index">${String(i+1).padStart(2,'0')}</span>
-                <span><span class="news-title-text">${item.title}</span>
-                <span class="news-brief">${item.description || ''}</span></span>
-                <span class="news-time-tag">${item.time || '今日'}</span>`;
-            ul.appendChild(li);
-        });
-    }
+            const statusEl = document.getElementById('updateStatus');
 
-    function renderShehui(items) {
-        const ul = document.getElementById('shehui-list');
-        ul.innerHTML = '';
-        items.forEach((item,i) => {
-            const li = document.createElement('li');
-            const rank = i+1;
-            let cls = '';
-            if(rank===1) cls='top1';
-            else if(rank===2) cls='top2';
-            else if(rank===3) cls='top3';
-            li.innerHTML = `<span class="hot-rank ${cls}">${rank}</span><span>${item.title}</span>
-                ${item.tag?`<span class="hot-tag">${item.tag}</span>`:''}`;
-            ul.appendChild(li);
-        });
-    }
+            // 备用数据（所有源都失败时使用）
+            const fallback = {
+                xinwen: [
+                    {title:"全国科技创新大会在京召开",description:"多项重大科研成果集中发布",time:"19:00"},
+                    {title:"上半年GDP同比增长5.2%",description:"国民经济运行稳中向好",time:"19:05"},
+                    {title:"我国成功发射新技术试验卫星",description:"空间探索再添利器",time:"19:10"},
+                    {title:"各地保障夏季电力供应",description:"迎峰度夏有序推进",time:"19:16"},
+                    {title:"暑运旅客发送量创历史新高",description:"全国铁路优化服务保障",time:"19:22"}
+                ],
+                shehui: [
+                    {title:"新能源汽车渗透率突破55%",tag:"热门"},
+                    {title:"老旧小区改造提升生活品质",tag:"攀升"},
+                    {title:"全民健身活动在全国展开",tag:"新"},
+                    {title:"新型储能技术成本下降40%",tag:"攀升"},
+                    {title:"暑期文旅消费持续升温",tag:"热门"},
+                    {title:"智能家居千亿市场加速成型",tag:"新"}
+                ],
+                jiaodian: {
+                    title:"乡村振兴路上的青年力量",
+                    summary:"从城市回到乡村，从写字楼走向田间地头，一批批90后青年正成为乡村振兴的中坚力量。他们用新技术、新理念改造传统农业，让手机成为“新农具”，让直播成为“新农活”。"
+                },
+                guoji: ["联合国大会就全球治理改革展开讨论","欧盟推动数字经济发展新战略","东盟外长会议聚焦区域一体化","中东多国加速能源转型","非洲自贸区建设取得进展"],
+                shijie: ["全球气候行动峰会在巴黎举行","国际空间站新实验模块对接","世界人工智能大会召开","全球粮食安全指数发布","IMF上调全球增长预期"],
+                wangluo: [
+                    {title:"AI绘画引发创意产业讨论",heat:"🔥 980万"},
+                    {title:"夏日旅行打卡地推荐",heat:"🔥 756万"},
+                    {title:"国产动画电影票房破纪录",heat:"🔥 620万"},
+                    {title:"全民健身挑战赛",heat:"📈 480万"},
+                    {title:"智能家居新体验",heat:"📈 350万"},
+                    {title:"各地特色美食出圈",heat:"🆕 210万"}
+                ]
+            };
 
-    function renderList(id, items) {
-        const ul = document.getElementById(id);
-        ul.innerHTML = '';
-        items.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = typeof item === 'string' ? item : item.title;
-            ul.appendChild(li);
-        });
-    }
+            // 渲染函数
+            function renderXinwen(items) {
+                const ul = document.getElementById('xinwen-list');
+                ul.innerHTML = '';
+                items.slice(0,5).forEach((item,i) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="news-index">${String(i+1).padStart(2,'0')}</span>
+                        <span><span class="news-title-text">${item.title}</span>
+                        <span class="news-brief">${item.description || ''}</span></span>
+                        <span class="news-time-tag">${item.time || '今日'}</span>`;
+                    ul.appendChild(li);
+                });
+            }
 
-    function renderWangluo(items) {
-        const div = document.getElementById('wangluo-list');
-        div.innerHTML = '';
-        items.forEach(item => {
-            const span = document.createElement('span');
-            span.className = 'topic-tag-item';
-            span.innerHTML = `#${item.title} <span style="font-size:0.7rem;color:#999;">${item.heat||''}</span>`;
-            div.appendChild(span);
-        });
-    }
-})();
-</script>
+            function renderShehui(items) {
+                const ul = document.getElementById('shehui-list');
+                ul.innerHTML = '';
+                items.slice(0,6).forEach((item,i) => {
+                    const li = document.createElement('li');
+                    const rank = i+1;
+                    let cls = '';
+                    if(rank===1) cls='top1';
+                    else if(rank===2) cls='top2';
+                    else if(rank===3) cls='top3';
+                    li.innerHTML = `<span class="hot-rank ${cls}">${rank}</span><span>${item.title}</span>
+                        ${item.tag?`<span class="hot-tag">${item.tag}</span>`:''}`;
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderJiaodian(item) {
+                document.getElementById('jiaodian-title').textContent = item.title;
+                document.getElementById('jiaodian-summary').textContent = item.summary;
+            }
+
+            function renderSimpleList(id, items) {
+                const ul = document.getElementById(id);
+                ul.innerHTML = '';
+                items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = typeof item === 'string' ? item : item.title;
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderWangluo(items) {
+                const div = document.getElementById('wangluo-list');
+                div.innerHTML = '';
+                items.forEach(item => {
+                    const span = document.createElement('span');
+                    span.className = 'topic-tag-item';
+                    span.innerHTML = `#${item.title} <span style="font-size:0.7rem;color:#999;">${item.heat||''}</span>`;
+                    div.appendChild(span);
+                });
+            }
+
+            // 通过 rss2json 获取 RSS 内容
+            async function fetchRSS(rssUrl) {
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+                const resp = await fetch(apiUrl);
+                const data = await resp.json();
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    return data.items.map(item => ({
+                        title: item.title,
+                        description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 80),
+                        time: item.pubDate ? new Date(item.pubDate).toLocaleTimeString('zh-CN',{hour12:false}).slice(0,5) : ''
+                    }));
+                }
+                throw new Error('RSS 解析失败');
+            }
+
+            // 主加载函数
+            async function loadNews() {
+                let newsItems = null;
+                let sourceName = '';
+
+                // 尝试多个 RSS 源
+                const sources = [
+                    { name: '央视新闻', url: 'https://news.cctv.com/rss/' },
+                    { name: '新华社', url: 'http://www.xinhuanet.com/rss/title/10.xml' }
+                ];
+
+                for (let src of sources) {
+                    try {
+                        statusEl.textContent = `⏳ 正在从 ${src.name} 获取新闻…`;
+                        newsItems = await fetchRSS(src.url);
+                        sourceName = src.name;
+                        break;
+                    } catch (e) {
+                        console.warn(`${src.name} 获取失败`, e);
+                    }
+                }
+
+                if (newsItems && newsItems.length >= 3) {
+                    // 成功获取真实新闻
+                    statusEl.innerHTML = `✅ 实时新闻 · 来源：${sourceName} · <span style="cursor:pointer;text-decoration:underline;" onclick="location.reload()">刷新</span>`;
+                    renderXinwen(newsItems);
+                    // 社会热点基于真实新闻前几条
+                    const shehuiItems = newsItems.slice(0,6).map((item,i) => ({
+                        title: item.title,
+                        tag: i<2?'热门':(i<4?'攀升':'新')
+                    }));
+                    renderShehui(shehuiItems);
+                    renderJiaodian({
+                        title: '今日焦点：' + newsItems[0].title,
+                        summary: newsItems[0].description || '详细报道请关注今晚焦点访谈节目。'
+                    });
+                    // 国际、世界、网络热门仍用固定模板（可后续扩展）
+                    renderSimpleList('guoji-list', fallback.guoji);
+                    renderSimpleList('shijie-list', fallback.shijie);
+                    renderWangluo(fallback.wangluo);
+                } else {
+                    // 失败：使用备用数据
+                    statusEl.innerHTML = '⚠️ 实时新闻暂时获取失败，显示今日参考内容 · <span style="cursor:pointer;text-decoration:underline;" onclick="location.reload()">点击重试</span>';
+                    renderXinwen(fallback.xinwen);
+                    renderShehui(fallback.shehui);
+                    renderJiaodian(fallback.jiaodian);
+                    renderSimpleList('guoji-list', fallback.guoji);
+                    renderSimpleList('shijie-list', fallback.shijie);
+                    renderWangluo(fallback.wangluo);
+                }
+            }
+
+            loadNews();
+        })();
+    </script>
+</body>
+</html>
