@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📰 我的每日新闻 · 自动实时</title>
+    <title>📰 我的每日新闻 · 点击看全文</title>
     <style>
         :root {
             --bg: #f0f2f5; --card-bg: #ffffff; --text: #1a1a2e; --text-muted: #888;
@@ -14,6 +14,8 @@
         }
         *{margin:0;padding:0;box-sizing:border-box;}
         body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+        a{color:var(--color-xinwen);text-decoration:none;transition:0.2s;}
+        a:hover{text-decoration:underline;opacity:0.85;}
         .header{background:var(--header-gradient);color:#fff;padding:18px 0;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.18);border-bottom:3px solid #e63946;}
         .header-inner{max-width:1300px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
         .logo{font-size:1.5rem;font-weight:700;} .header-date{background:rgba(255,255,255,0.1);padding:6px 16px;border-radius:20px;font-size:0.9rem;}
@@ -49,6 +51,7 @@
         .jiaodian-content{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
         .jiaodian-visual{width:160px;height:120px;border-radius:10px;background:linear-gradient(135deg,#f5e6d3,#e8d5bc);display:flex;align-items:center;justify-content:center;font-size:2.5rem;flex-shrink:0;}
         .jiaodian-main-title{font-size:1.2rem;font-weight:700;margin-bottom:8px;}
+        .jiaodian-main-title a{color:#1a1a2e;}
         .jiaodian-summary{font-size:0.9rem;color:#555;line-height:1.7;}
         .bottom-row{grid-area:bottom;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
         .compact-news-list{list-style:none;}
@@ -58,8 +61,9 @@
         .card-shijie .compact-news-list li:hover{border-left-color:var(--color-shijie);background:#faf5fd;}
         .card-wangluo .compact-news-list li:hover{border-left-color:var(--color-wangluo);background:#f5fcfd;}
         .topic-tag-list{display:flex;flex-wrap:wrap;gap:8px;}
-        .topic-tag-item{padding:6px 14px;border-radius:18px;font-size:0.82rem;font-weight:500;background:#f5fcfd;color:var(--color-wangluo);border:1px solid #e0f0f2;white-space:nowrap;}
-        .topic-tag-item:hover{background:#e0f4f6;}
+        .topic-tag-item{padding:6px 14px;border-radius:18px;font-size:0.82rem;font-weight:500;background:#f5fcfd;color:var(--color-wangluo);border:1px solid #e0f0f2;white-space:nowrap;transition:0.2s;}
+        .topic-tag-item:hover{background:#e0f4f6;transform:translateY(-1px);}
+        .topic-tag-item a{color:var(--color-wangluo);}
         .footer{text-align:center;padding:20px;color:#aaa;font-size:0.8rem;}
         @media(max-width:900px){
             .main-container{grid-template-columns:1fr;grid-template-areas:"xinwen" "shehui" "jiaodian" "bottom";}
@@ -104,11 +108,10 @@
             <section class="card card-wangluo"><div class="card-header"><div class="card-icon">📱</div><h2 class="card-title">网络热门</h2></div><div class="topic-tag-list" id="wangluo-list"><span>⏳</span></div></section>
         </div>
     </main>
-    <footer class="footer">数据来源：新华社、央视新闻 · 自动实时更新</footer>
+    <footer class="footer">数据来源：新华社、央视新闻 · 点击标题即可阅读原文</footer>
 
     <script>
         (function() {
-            // 日期显示
             const now = new Date();
             const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
             document.getElementById('currentDate').textContent = 
@@ -116,48 +119,50 @@
 
             const statusEl = document.getElementById('updateStatus');
 
-            // 备用数据（所有源都失败时使用）
             const fallback = {
                 xinwen: [
-                    {title:"全国科技创新大会在京召开",description:"多项重大科研成果集中发布",time:"19:00"},
-                    {title:"上半年GDP同比增长5.2%",description:"国民经济运行稳中向好",time:"19:05"},
-                    {title:"我国成功发射新技术试验卫星",description:"空间探索再添利器",time:"19:10"},
-                    {title:"各地保障夏季电力供应",description:"迎峰度夏有序推进",time:"19:16"},
-                    {title:"暑运旅客发送量创历史新高",description:"全国铁路优化服务保障",time:"19:22"}
+                    {title:"全国科技创新大会在京召开",description:"多项重大科研成果集中发布",time:"19:00",link:"https://www.xinhuanet.com"},
+                    {title:"上半年GDP同比增长5.2%",description:"国民经济运行稳中向好",time:"19:05",link:"https://www.xinhuanet.com"},
+                    {title:"我国成功发射新技术试验卫星",description:"空间探索再添利器",time:"19:10",link:"https://www.xinhuanet.com"},
+                    {title:"各地保障夏季电力供应",description:"迎峰度夏有序推进",time:"19:16",link:"https://www.xinhuanet.com"},
+                    {title:"暑运旅客发送量创历史新高",description:"全国铁路优化服务保障",time:"19:22",link:"https://www.xinhuanet.com"}
                 ],
                 shehui: [
-                    {title:"新能源汽车渗透率突破55%",tag:"热门"},
-                    {title:"老旧小区改造提升生活品质",tag:"攀升"},
-                    {title:"全民健身活动在全国展开",tag:"新"},
-                    {title:"新型储能技术成本下降40%",tag:"攀升"},
-                    {title:"暑期文旅消费持续升温",tag:"热门"},
-                    {title:"智能家居千亿市场加速成型",tag:"新"}
+                    {title:"新能源汽车渗透率突破55%",tag:"热门",link:"https://www.cctv.com"},
+                    {title:"老旧小区改造提升生活品质",tag:"攀升",link:"https://www.cctv.com"},
+                    {title:"全民健身活动在全国展开",tag:"新",link:"https://www.cctv.com"},
+                    {title:"新型储能技术成本下降40%",tag:"攀升",link:"https://www.cctv.com"},
+                    {title:"暑期文旅消费持续升温",tag:"热门",link:"https://www.cctv.com"},
+                    {title:"智能家居千亿市场加速成型",tag:"新",link:"https://www.cctv.com"}
                 ],
                 jiaodian: {
                     title:"乡村振兴路上的青年力量",
-                    summary:"从城市回到乡村，从写字楼走向田间地头，一批批90后青年正成为乡村振兴的中坚力量。他们用新技术、新理念改造传统农业，让手机成为“新农具”，让直播成为“新农活”。"
+                    summary:"从城市回到乡村，从写字楼走向田间地头，一批批90后青年正成为乡村振兴的中坚力量。他们用新技术、新理念改造传统农业，让手机成为“新农具”，让直播成为“新农活”。",
+                    link:"https://www.cctv.com"
                 },
                 guoji: ["联合国大会就全球治理改革展开讨论","欧盟推动数字经济发展新战略","东盟外长会议聚焦区域一体化","中东多国加速能源转型","非洲自贸区建设取得进展"],
                 shijie: ["全球气候行动峰会在巴黎举行","国际空间站新实验模块对接","世界人工智能大会召开","全球粮食安全指数发布","IMF上调全球增长预期"],
                 wangluo: [
-                    {title:"AI绘画引发创意产业讨论",heat:"🔥 980万"},
-                    {title:"夏日旅行打卡地推荐",heat:"🔥 756万"},
-                    {title:"国产动画电影票房破纪录",heat:"🔥 620万"},
-                    {title:"全民健身挑战赛",heat:"📈 480万"},
-                    {title:"智能家居新体验",heat:"📈 350万"},
-                    {title:"各地特色美食出圈",heat:"🆕 210万"}
+                    {title:"AI绘画引发创意产业讨论",heat:"🔥 980万",link:"https://weibo.com"},
+                    {title:"夏日旅行打卡地推荐",heat:"🔥 756万",link:"https://weibo.com"},
+                    {title:"国产动画电影票房破纪录",heat:"🔥 620万",link:"https://weibo.com"},
+                    {title:"全民健身挑战赛",heat:"📈 480万",link:"https://weibo.com"},
+                    {title:"智能家居新体验",heat:"📈 350万",link:"https://weibo.com"},
+                    {title:"各地特色美食出圈",heat:"🆕 210万",link:"https://weibo.com"}
                 ]
             };
 
-            // 渲染函数
             function renderXinwen(items) {
                 const ul = document.getElementById('xinwen-list');
                 ul.innerHTML = '';
                 items.slice(0,5).forEach((item,i) => {
                     const li = document.createElement('li');
+                    const linkUrl = item.link || '#';
                     li.innerHTML = `<span class="news-index">${String(i+1).padStart(2,'0')}</span>
-                        <span><span class="news-title-text">${item.title}</span>
-                        <span class="news-brief">${item.description || ''}</span></span>
+                        <span style="flex:1;">
+                            <a href="${linkUrl}" target="_blank" rel="noopener" class="news-title-text">${item.title}</a>
+                            <span class="news-brief">${item.description || ''}</span>
+                        </span>
                         <span class="news-time-tag">${item.time || '今日'}</span>`;
                     ul.appendChild(li);
                 });
@@ -173,14 +178,21 @@
                     if(rank===1) cls='top1';
                     else if(rank===2) cls='top2';
                     else if(rank===3) cls='top3';
-                    li.innerHTML = `<span class="hot-rank ${cls}">${rank}</span><span>${item.title}</span>
+                    const linkUrl = item.link || '#';
+                    li.innerHTML = `<span class="hot-rank ${cls}">${rank}</span>
+                        <a href="${linkUrl}" target="_blank" rel="noopener" style="color:#1a1a2e;font-weight:500;">${item.title}</a>
                         ${item.tag?`<span class="hot-tag">${item.tag}</span>`:''}`;
                     ul.appendChild(li);
                 });
             }
 
             function renderJiaodian(item) {
-                document.getElementById('jiaodian-title').textContent = item.title;
+                const titleEl = document.getElementById('jiaodian-title');
+                if (item.link && item.link !== '#') {
+                    titleEl.innerHTML = `<a href="${item.link}" target="_blank" rel="noopener">${item.title}</a>`;
+                } else {
+                    titleEl.textContent = item.title;
+                }
                 document.getElementById('jiaodian-summary').textContent = item.summary;
             }
 
@@ -200,12 +212,12 @@
                 items.forEach(item => {
                     const span = document.createElement('span');
                     span.className = 'topic-tag-item';
-                    span.innerHTML = `#${item.title} <span style="font-size:0.7rem;color:#999;">${item.heat||''}</span>`;
+                    const linkUrl = item.link || '#';
+                    span.innerHTML = `<a href="${linkUrl}" target="_blank" rel="noopener" style="color:var(--color-wangluo);">#${item.title}</a> <span style="font-size:0.7rem;color:#999;">${item.heat||''}</span>`;
                     div.appendChild(span);
                 });
             }
 
-            // 通过 rss2json 获取 RSS 内容
             async function fetchRSS(rssUrl) {
                 const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
                 const resp = await fetch(apiUrl);
@@ -214,18 +226,17 @@
                     return data.items.map(item => ({
                         title: item.title,
                         description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 80),
-                        time: item.pubDate ? new Date(item.pubDate).toLocaleTimeString('zh-CN',{hour12:false}).slice(0,5) : ''
+                        time: item.pubDate ? new Date(item.pubDate).toLocaleTimeString('zh-CN',{hour12:false}).slice(0,5) : '',
+                        link: item.link || ''
                     }));
                 }
                 throw new Error('RSS 解析失败');
             }
 
-            // 主加载函数
             async function loadNews() {
                 let newsItems = null;
                 let sourceName = '';
 
-                // 尝试多个 RSS 源
                 const sources = [
                     { name: '央视新闻', url: 'https://news.cctv.com/rss/' },
                     { name: '新华社', url: 'http://www.xinhuanet.com/rss/title/10.xml' }
@@ -243,25 +254,22 @@
                 }
 
                 if (newsItems && newsItems.length >= 3) {
-                    // 成功获取真实新闻
                     statusEl.innerHTML = `✅ 实时新闻 · 来源：${sourceName} · <span style="cursor:pointer;text-decoration:underline;" onclick="location.reload()">刷新</span>`;
                     renderXinwen(newsItems);
-                    // 社会热点基于真实新闻前几条
                     const shehuiItems = newsItems.slice(0,6).map((item,i) => ({
-                        title: item.title,
+                        ...item,
                         tag: i<2?'热门':(i<4?'攀升':'新')
                     }));
                     renderShehui(shehuiItems);
                     renderJiaodian({
                         title: '今日焦点：' + newsItems[0].title,
-                        summary: newsItems[0].description || '详细报道请关注今晚焦点访谈节目。'
+                        summary: newsItems[0].description || '详细报道请关注今晚焦点访谈节目。',
+                        link: newsItems[0].link || '#'
                     });
-                    // 国际、世界、网络热门仍用固定模板（可后续扩展）
                     renderSimpleList('guoji-list', fallback.guoji);
                     renderSimpleList('shijie-list', fallback.shijie);
                     renderWangluo(fallback.wangluo);
                 } else {
-                    // 失败：使用备用数据
                     statusEl.innerHTML = '⚠️ 实时新闻暂时获取失败，显示今日参考内容 · <span style="cursor:pointer;text-decoration:underline;" onclick="location.reload()">点击重试</span>';
                     renderXinwen(fallback.xinwen);
                     renderShehui(fallback.shehui);
