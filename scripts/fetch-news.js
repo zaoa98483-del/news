@@ -1,47 +1,40 @@
-const https = require('https');
+const axios = require('axios');
 const fs = require('fs');
 
-function fetchRSS(url) {
-  return new Promise((resolve, reject) => {
+// 备用新闻（永远确保有内容）
+const fallbackNews = [
+  { title: "全国科技创新大会在京召开", description: "多项重大科研成果集中发布", source: "备用" },
+  { title: "上半年GDP同比增长5.2%", description: "国民经济运行稳中向好", source: "备用" },
+  { title: "我国成功发射新技术试验卫星", description: "空间探索再添利器", source: "备用" },
+  { title: "各地保障夏季电力供应", description: "迎峰度夏有序推进", source: "备用" },
+  { title: "暑运旅客发送量创历史新高", description: "全国铁路优化服务保障", source: "备用" }
+];
+
+async function fetchRSS(url, sourceName) {
+  try {
     const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-    https.get(apiUrl, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          if (json.status === 'ok' && json.items && json.items.length > 0) {
-            const items = json.items.map(item => ({
-              title: item.title,
-              description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 80),
-              source: new URL(url).hostname.replace('www.', '')
-            }));
-            resolve(items);
-          } else {
-            resolve([]); // 返回空数组，不抛异常
-          }
-        } catch (e) {
-          resolve([]);
-        }
-      });
-    }).on('error', () => resolve([]));
-  });
+    const res = await axios.get(apiUrl, { timeout: 10000 });
+    if (res.data && res.data.status === 'ok' && res.data.items) {
+      return res.data.items.map(item => ({
+        title: item.title,
+        description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 80),
+        source: sourceName
+      }));
+    }
+  } catch (e) {
+    console.log(`${sourceName} 抓取失败: ${e.message}`);
+  }
+  return [];
 }
 
 (async () => {
   let allNews = [];
 
-  // 尝试抓取央视新闻
-  try {
-    const cctv = await fetchRSS('https://news.cctv.com/rss/');
-    allNews = allNews.concat(cctv);
-  } catch (e) {}
-
-  // 尝试抓取新华社
-  try {
-    const xinhua = await fetchRSS('http://www.xinhuanet.com/rss/title/10.xml');
-    allNews = allNews.concat(xinhua);
-  } catch (e) {}
+  // 尝试两个源
+  const cctv = await fetchRSS('https://news.cctv.com/rss/', '央视新闻');
+  allNews = allNews.concat(cctv);
+  const xinhua = await fetchRSS('http://www.xinhuanet.com/rss/title/10.xml', '新华社');
+  allNews = allNews.concat(xinhua);
 
   // 去重
   const seen = new Set();
@@ -53,15 +46,7 @@ function fetchRSS(url) {
     }
   }
 
-  // 如果一条都没抓到，用备用数据
-  const fallbackNews = [
-    { title: "全国科技创新大会在京召开", description: "多项重大科研成果集中发布", source: "备用" },
-    { title: "上半年GDP同比增长5.2%", description: "国民经济运行稳中向好", source: "备用" },
-    { title: "我国成功发射新技术试验卫星", description: "空间探索再添利器", source: "备用" },
-    { title: "各地保障夏季电力供应", description: "迎峰度夏有序推进", source: "备用" },
-    { title: "暑运旅客发送量创历史新高", description: "全国铁路优化服务保障", source: "备用" }
-  ];
-
+  // 选择最终使用的新闻（抓取失败就用备用）
   const finalNews = uniqueNews.length >= 2 ? uniqueNews : fallbackNews;
 
   const xinwenlianbo = finalNews.slice(0, 5);
@@ -90,6 +75,12 @@ function fetchRSS(url) {
     ]
   };
 
-  fs.writeFileSync('data.json', JSON.stringify(data, null, 2), 'utf-8');
-  console.log('✅ data.json 生成成功，共', finalNews.length, '条新闻');
+  // 写入文件，错误时也不崩溃
+  try {
+    fs.writeFileSync('data.json', JSON.stringify(data, null, 2), 'utf-8');
+    console.log('✅ data.json 生成成功');
+  } catch (err) {
+    console.error('写入文件失败:', err);
+    process.exit(1); // 只有写文件失败才报错
+  }
 })();
