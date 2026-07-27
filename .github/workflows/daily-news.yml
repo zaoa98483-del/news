@@ -1,0 +1,26 @@
+name: 每天早上8点更新新闻
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 安装依赖
+        run: npm install axios
+      - name: 运行抓取脚本
+        run: node fetch_news.js
+      - name: 提交 data.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git diff --staged --quiet || git commit -m "📰 自动更新新闻 $(date +'%Y-%m-%d %H:%M')"
+          git push
