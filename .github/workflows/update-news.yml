@@ -2,7 +2,7 @@ name: 每天早上8点更新新闻
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # UTC 0点 = 北京时间 8点
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,6 +12,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 安装依赖
+        run: npm install axios
       - name: 运行抓取脚本
         run: node scripts/fetch_news.js
       - name: 提交 data.json
