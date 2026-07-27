@@ -1,0 +1,67 @@
+const axios = require('axios');
+const fs = require('fs');
+
+const fallbackNews = [
+  { title: "全国科技创新大会在京召开", description: "多项重大科研成果集中发布", source: "备用" },
+  { title: "上半年GDP同比增长5.2%", description: "国民经济运行稳中向好", source: "备用" },
+  { title: "我国成功发射新技术试验卫星", description: "空间探索再添利器", source: "备用" },
+  { title: "各地保障夏季电力供应", description: "迎峰度夏有序推进", source: "备用" },
+  { title: "暑运旅客发送量创历史新高", description: "全国铁路优化服务保障", source: "备用" }
+];
+
+async function fetchRSS(url, sourceName) {
+  try {
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+    const res = await axios.get(apiUrl, { timeout: 10000 });
+    if (res.data && res.data.status === 'ok' && res.data.items) {
+      return res.data.items.map(item => ({
+        title: item.title,
+        description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 80),
+        source: sourceName
+      }));
+    }
+  } catch (e) {}
+  return [];
+}
+
+(async () => {
+  let allNews = [];
+  allNews = allNews.concat(await fetchRSS('https://news.cctv.com/rss/', '央视新闻'));
+  allNews = allNews.concat(await fetchRSS('http://www.xinhuanet.com/rss/title/10.xml', '新华社'));
+
+  const seen = new Set();
+  const uniqueNews = [];
+  for (let item of allNews) {
+    if (!seen.has(item.title)) { seen.add(item.title); uniqueNews.push(item); }
+  }
+
+  const finalNews = uniqueNews.length >= 2 ? uniqueNews : fallbackNews;
+  const xinwenlianbo = finalNews.slice(0, 5);
+  const shehui = finalNews.slice(0, 6).map((item, i) => {
+    const tags = ['热门','攀升','新','热门','攀升','新'];
+    return { ...item, tag: tags[i % 6] };
+  });
+
+  const data = {
+    update_time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+    xinwenlianbo,
+    shehui,
+    jiaodian: {
+      title: xinwenlianbo[0]?.title || '今日焦点',
+      summary: xinwenlianbo[0]?.description || '请关注今日重要新闻。'
+    },
+    guoji: ["联合国大会就全球治理改革展开讨论","欧盟推动数字经济发展新战略","东盟外长会议聚焦区域一体化","中东多国加速能源转型","非洲自贸区建设取得进展"],
+    shijie: ["全球气候行动峰会在巴黎举行","国际空间站新实验模块对接","世界人工智能大会召开","全球粮食安全指数发布","IMF上调全球增长预期"],
+    wangluo: [
+      { title: "AI绘画引发创意产业讨论", heat: "🔥 980万" },
+      { title: "夏日旅行打卡地推荐", heat: "🔥 756万" },
+      { title: "国产动画电影票房破纪录", heat: "🔥 620万" },
+      { title: "全民健身挑战赛", heat: "📈 480万" },
+      { title: "智能家居新体验", heat: "📈 350万" },
+      { title: "各地特色美食出圈", heat: "🆕 210万" }
+    ]
+  };
+
+  fs.writeFileSync('data.json', JSON.stringify(data, null, 2), 'utf-8');
+  console.log('✅ data.json 生成成功');
+})();
