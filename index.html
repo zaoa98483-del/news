@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📰 我的每日新闻 · 自动早8点更新</title>
+    <title>📰 我的每日新闻 · 自动更新</title>
     <style>
         :root {
             --bg: #f0f2f5; --card-bg: #ffffff; --text: #1a1a2e; --text-muted: #888;
@@ -66,7 +66,7 @@
             <div class="logo">📰 我的每日新闻</div>
             <div class="header-date" id="currentDate"></div>
         </div>
-        <div class="update-info" id="updateTime">数据更新时间：--</div>
+        <div class="update-info" id="updateTime">数据更新时间：加载中…</div>
     </header>
 
     <main class="main-container">
@@ -103,7 +103,7 @@
             document.getElementById('currentDate').textContent = 
                 `${now.getFullYear()}年${String(now.getMonth()+1).padStart(2,'0')}月${String(now.getDate()).padStart(2,'0')}日 ${weekdays[now.getDay()]}`;
 
-            // 备用数据（确保即使 data.json 加载失败也有内容）
+            // 备用数据（确保 data.json 加载失败时也有内容）
             const fallback = {
                 update_time: "备用数据",
                 xinwenlianbo: [
@@ -197,7 +197,8 @@
 
             async function loadData() {
                 try {
-                    const res = await fetch('data.json');
+                    // 加时间戳防止缓存
+                    const res = await fetch(`data.json?t=${Date.now()}`);
                     if (!res.ok) throw new Error('文件不存在');
                     const data = await res.json();
                     document.getElementById('updateTime').textContent = `数据更新时间：${data.update_time || '未知'}`;
@@ -208,7 +209,7 @@
                     renderSimpleList('shijie-list', data.shijie);
                     renderWangluo(data.wangluo);
                 } catch (e) {
-                    console.warn('data.json 加载失败，使用备用数据', e);
+                    console.warn('data.json 加载失败，使用备用数据');
                     document.getElementById('updateTime').textContent = '数据更新时间：备用数据';
                     renderXinwen(fallback.xinwenlianbo);
                     renderShehui(fallback.shehui);
